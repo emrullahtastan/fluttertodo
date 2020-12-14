@@ -1,27 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/models/api_response.dart';
 import 'package:flutter_app/models/note_for_listing.dart';
+import 'package:flutter_app/services/notes_service.dart';
 import 'package:flutter_app/views/note_delete.dart';
 import 'package:flutter_app/views/note_modify.dart';
+import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 
-class NoteList extends StatelessWidget {
-  final notes = [
-    new NoteForListing(
-        NoteID: "1",
-        NoteTitle: "Note 1",
-        CreateDateTime: DateTime.now(),
-        latestEditDateTime: DateTime.now()),
-    new NoteForListing(
-        NoteID: "2",
-        NoteTitle: "Note 2",
-        CreateDateTime: DateTime.now(),
-        latestEditDateTime: DateTime.now()),
-    new NoteForListing(
-        NoteID: "3",
-        NoteTitle: "Note 3",
-        CreateDateTime: DateTime.now(),
-        latestEditDateTime: DateTime.now())
-  ];
+class NoteList extends StatefulWidget {
+
+  @override
+  _NoteListState createState() => _NoteListState();
+}
+
+class _NoteListState extends State<NoteList> {
+  NotesService get service=>GetIt.I<NotesService>();
+
+  List<NoteForListing> notes=[];
+
+  APIResponse<List<NoteForListing>> _apiResponse;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    _fetchNotes();
+    super.initState();
+  }
+
+  _fetchNotes() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    _apiResponse = await service.getNotesList();
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
