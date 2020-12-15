@@ -8,15 +8,14 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 
 class NoteList extends StatefulWidget {
-
   @override
   _NoteListState createState() => _NoteListState();
 }
 
 class _NoteListState extends State<NoteList> {
-  NotesService get service=>GetIt.I<NotesService>();
+  NotesService get service => GetIt.I<NotesService>();
 
-  List<NoteForListing> notes=[];
+  List<NoteForListing> notes = [];
 
   APIResponse<List<NoteForListing>> _apiResponse;
   bool _isLoading = false;
@@ -33,6 +32,7 @@ class _NoteListState extends State<NoteList> {
     });
 
     _apiResponse = await service.getNotesList();
+    notes = _apiResponse.data;
 
     setState(() {
       _isLoading = false;
@@ -53,42 +53,58 @@ class _NoteListState extends State<NoteList> {
         },
         child: Icon(Icons.add),
       ),
-      body: ListView.separated(
-        separatorBuilder: (_, __) => Divider(height: 1, color: Colors.green),
-        itemBuilder: (_, index) {
-          return Dismissible(
-            key: ValueKey(notes[index].NoteID),
-            direction: DismissDirection.startToEnd,
-            onDismissed: (direction) {},
-            confirmDismiss: (direction) async {
-              final result = await showDialog(
-                  context: context, builder: (_) => NoteDelete());
-              print(result);
-              return result;
+      body: Builder(
+        builder: (_) {
+          if (_isLoading) {
+            return CircularProgressIndicator();
+          }
+          if (_apiResponse.error) {
+            return Center(child: Text(_apiResponse.errorMessage));
+          }
+
+          return ListView.separated(
+            separatorBuilder: (_, __) =>
+                Divider(height: 1, color: Colors.green),
+            itemBuilder: (_, index) {
+              return Dismissible(
+                key: ValueKey(notes[index].NoteID),
+                direction: DismissDirection.startToEnd,
+                onDismissed: (direction) {},
+                confirmDismiss: (direction) async {
+                  final result = await showDialog(
+                      context: context, builder: (_) => NoteDelete());
+                  print(result);
+                  return result;
+                },
+                background: Container(
+                  color: Colors.red,
+                  padding: EdgeInsets.only(left: 16),
+                  child: Align(
+                    child: Icon(Icons.delete, color: Colors.white),
+                    alignment: Alignment.centerLeft,
+                  ),
+                ),
+                child: ListTile(
+                  title: Text(notes[index].NoteTitle,
+                      style: TextStyle(color: Theme
+                          .of(context)
+                          .primaryColor)),
+                  subtitle: Text(
+                      'Last edited on ${DateFormat("dd.MM.yyyy kk:mm").format(
+                          notes[index].latestEditDateTime)}'),
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) =>
+                            NoteModify(
+                              noteID: notes[index].NoteID,
+                            )));
+                  },
+                ),
+              );
             },
-            background: Container(
-              color: Colors.red,
-              padding: EdgeInsets.only(left: 16),
-              child: Align(
-                child: Icon(Icons.delete, color: Colors.white),
-                alignment: Alignment.centerLeft,
-              ),
-            ),
-            child: ListTile(
-              title: Text(notes[index].NoteTitle,
-                  style: TextStyle(color: Theme.of(context).primaryColor)),
-              subtitle: Text(
-                  'Last edited on ${DateFormat("dd.MM.yyyy kk:mm").format(notes[index].latestEditDateTime)})'),
-              onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => NoteModify(
-                          noteID: notes[index].NoteID,
-                        )));
-              },
-            ),
+            itemCount: notes.length,
           );
         },
-        itemCount: notes.length,
       ),
     );
   }
