@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/models/api_response.dart';
 import 'package:flutter_app/models/note_for_listing.dart';
 import 'package:flutter_app/services/notes_service.dart';
-import 'package:flutter_app/views/note_delete.dart';
-import 'package:flutter_app/views/note_modify.dart';
 import 'package:get_it/get_it.dart';
-import 'package:intl/intl.dart';
+
+import 'note_delete.dart';
+import 'note_modify.dart';
 
 class NoteList extends StatefulWidget {
   @override
@@ -15,10 +15,12 @@ class NoteList extends StatefulWidget {
 class _NoteListState extends State<NoteList> {
   NotesService get service => GetIt.I<NotesService>();
 
-  List<NoteForListing> notes = [];
-
   APIResponse<List<NoteForListing>> _apiResponse;
   bool _isLoading = false;
+
+  String formatDateTime(DateTime dateTime) {
+    return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+  }
 
   @override
   void initState() {
@@ -32,7 +34,6 @@ class _NoteListState extends State<NoteList> {
     });
 
     _apiResponse = await service.getNotesList();
-    notes = _apiResponse.data;
 
     setState(() {
       _isLoading = false;
@@ -41,71 +42,65 @@ class _NoteListState extends State<NoteList> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return Scaffold(
-      appBar: AppBar(
-        title: Text('List of notes'),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context)
-              .push(MaterialPageRoute(builder: (_) => NoteModify()));
-        },
-        child: Icon(Icons.add),
-      ),
-      body: Builder(
-        builder: (_) {
-          if (_isLoading) {
-            return CircularProgressIndicator();
-          }
-          if (_apiResponse.error) {
-            return Center(child: Text(_apiResponse.errorMessage));
-          }
+        appBar: AppBar(title: Text('List of notes')),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => NoteModify()));
+          },
+          child: Icon(Icons.add),
+        ),
+        body: Builder(
+          builder: (_) {
+            if (_isLoading) {
+              return Center(child: CircularProgressIndicator());
+            }
 
-          return ListView.separated(
-            separatorBuilder: (_, __) =>
-                Divider(height: 1, color: Colors.green),
-            itemBuilder: (_, index) {
-              return Dismissible(
-                key: ValueKey(notes[index].NoteID),
-                direction: DismissDirection.startToEnd,
-                onDismissed: (direction) {},
-                confirmDismiss: (direction) async {
-                  final result = await showDialog(
-                      context: context, builder: (_) => NoteDelete());
-                  print(result);
-                  return result;
-                },
-                background: Container(
-                  color: Colors.red,
-                  padding: EdgeInsets.only(left: 16),
-                  child: Align(
-                    child: Icon(Icons.delete, color: Colors.white),
-                    alignment: Alignment.centerLeft,
-                  ),
-                ),
-                child: ListTile(
-                  title: Text(notes[index].NoteTitle,
-                      style: TextStyle(color: Theme
-                          .of(context)
-                          .primaryColor)),
-                  subtitle: Text(
-                      'Last edited on ${DateFormat("dd.MM.yyyy kk:mm").format(
-                          notes[index].latestEditDateTime)}'),
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) =>
-                            NoteModify(
-                              noteID: notes[index].NoteID,
-                            )));
+            if (_apiResponse.error) {
+              return Center(child: Text(_apiResponse.errorMessage));
+            }
+
+            return ListView.separated(
+              separatorBuilder: (_, __) =>
+                  Divider(height: 1, color: Colors.green),
+              itemBuilder: (_, index) {
+                return Dismissible(
+                  key: ValueKey(_apiResponse.data[index].NoteId),
+                  direction: DismissDirection.startToEnd,
+                  onDismissed: (direction) {},
+                  confirmDismiss: (direction) async {
+                    final result = await showDialog(
+                        context: context, builder: (_) => NoteDelete());
+                    print(result);
+                    return result;
                   },
-                ),
-              );
-            },
-            itemCount: notes.length,
-          );
-        },
-      ),
-    );
+                  background: Container(
+                    color: Colors.red,
+                    padding: EdgeInsets.only(left: 16),
+                    child: Align(
+                      child: Icon(Icons.delete, color: Colors.white),
+                      alignment: Alignment.centerLeft,
+                    ),
+                  ),
+                  child: ListTile(
+                    title: Text(
+                      _apiResponse.data[index].NoteTitle,
+                      style: TextStyle(color: Theme.of(context).primaryColor),
+                    ),
+                    /*subtitle: Text(
+                        'Last edited on ${formatDateTime(_apiResponse.data[index].latestEditDateTime ?? _apiResponse.data[index].createDateTime)}'),*/
+                    onTap: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => NoteModify(
+                              noteID: _apiResponse.data[index].NoteId)));
+                    },
+                  ),
+                );
+              },
+              itemCount: _apiResponse.data.length,
+            );
+          },
+        ));
   }
 }

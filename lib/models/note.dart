@@ -1,20 +1,23 @@
-class NoteForListing {
+class Note {
   String NoteId;
   String NoteTitle;
-  DateTime CreateDateTime;
+  String NoteContent;
+  DateTime CreatedDateTime;
   DateTime LatestEditDateTime;
 
-  NoteForListing(
+  Note(
       {this.NoteId,
       this.NoteTitle,
-      this.CreateDateTime,
+      this.NoteContent,
+      this.CreatedDateTime,
       this.LatestEditDateTime});
 
-  factory NoteForListing.fromJson(Map<String, dynamic> item) {
-    return NoteForListing(
-      NoteId: item['id'],
+  factory Note.fromJson(Map<String, dynamic> item) {
+    return Note(
+      NoteId: item['noteID'],
       NoteTitle: item['noteTitle'],
-      CreateDateTime: DateTime.parse(item['createDateTime']),
+      NoteContent: item['noteContent'],
+      CreatedDateTime: DateTime.parse(item['createdDateTime']),
       LatestEditDateTime: item['latestEditDateTime'] != null
           ? DateTime.parse(item['latestEditDateTime'])
           : null,
