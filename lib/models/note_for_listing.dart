@@ -12,9 +12,9 @@ class NoteForListing {
 
   factory NoteForListing.fromJson(Map<String, dynamic> item) {
     return NoteForListing(
-      NoteId: item['id'],
+      NoteId: item['id'].toString(),
       NoteTitle: item['noteTitle'],
-      CreateDateTime: DateTime.parse(item['createDateTime']),
+      CreateDateTime: DateTime.parse(item['createdDateTime']),
       LatestEditDateTime: item['latestEditDateTime'] != null
           ? DateTime.parse(item['latestEditDateTime'])
           : null,
